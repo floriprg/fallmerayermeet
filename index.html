@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced WebRTC Video Chat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="login-overlay" class="overlay">
+        <div class="login-box">
+            <h2>Willkommen zum Video-Chat</h2>
+            <input type="text" id="usernameInput" placeholder="Dein Name">
+            <input type="text" id="roomInput" placeholder="Raumname">
+            <button id="joinButton">Raum betreten</button>
+        </div>
+    </div>
+
+    <div class="container" style="display: none;">
+        <header>
+            <div class="room-info">
+                <h1 id="roomNameDisplay">Raum: <span></span></h1>
+                <p id="participantCount">0 Teilnehmer</p>
+            </div>
+            <div class="controls">
+                <button id="screenShareButton" title="Bildschirm teilen"><i class="fas fa-desktop"></i></button>
+                <button id="muteButton" title="Stummschalten"><i class="fas fa-microphone"></i></button>
+                <button id="videoOffButton" title="Video ausschalten"><i class="fas fa-video"></i></button>
+                <button id="hangupButton" title="Verlassen"><i class="fas fa-phone-slash"></i></button>
+            </div>
+        </header>
+
+        <div class="video-grid" id="videoContainer">
+            <!-- Videos werden hier dynamisch eingefügt -->
+        </div>
+
+        <div class="chat-container">
+            <div class="participants-list" id="participantsList">
+                <h3>Teilnehmer</h3>
+                <ul id="participants"></ul>
+            </div>
+            <div class="chat-box">
+                <div id="chatMessages"></div>
+                <div class="chat-input">
+                    <input type="text" id="messageInput" placeholder="Nachricht schreiben...">
+                    <button id="sendButton"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
