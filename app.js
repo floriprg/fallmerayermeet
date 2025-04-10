@@ -7,7 +7,7 @@ const config = {
     ],
     socketServer: window.location.hostname === 'localhost'
         ? 'http://localhost:3000'
-        : 'https://your-webrtc-server.com'
+        : 'https://fallmerayermeet.onrender.com/'
 };
 
 // Globale Variablen
