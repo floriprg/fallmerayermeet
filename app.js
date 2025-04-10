@@ -163,13 +163,22 @@ async function handleNewPeer(userId) {
 
     // Remote Stream handler
     peerConnection.ontrack = (event) => {
-        const remoteStream = event.streams[0];
-        const userId = event.streams[0].id;
-        const participant = getParticipantInfo(userId);
+        const [remoteStream] = event.streams;
+        const userId = event.transceiver.mid; // Besserer Identifier
 
-        if (participant) {
-            createVideoElement(remoteStream, participant.username, false, userId);
-        }
+        // Video-Element erstellen
+        const videoElement = createVideoElement(
+            remoteStream,
+            getParticipantInfo(userId)?.username || 'Unbekannt',
+            false,
+            userId
+        );
+
+        // Altes Video ggf. ersetzen
+        const existing = document.getElementById(`video-${userId}`);
+        if (existing) existing.remove();
+
+        videoContainer.appendChild(videoElement);
     };
 
     // Offer erstellen
@@ -216,13 +225,22 @@ async function handleOffer({ offer, from }) {
 
     // Remote Stream handler
     peerConnection.ontrack = (event) => {
-        const remoteStream = event.streams[0];
-        const userId = event.streams[0].id;
-        const participant = getParticipantInfo(userId);
+        const [remoteStream] = event.streams;
+        const userId = event.transceiver.mid; // Besserer Identifier
 
-        if (participant) {
-            createVideoElement(remoteStream, participant.username, false, userId);
-        }
+        // Video-Element erstellen
+        const videoElement = createVideoElement(
+            remoteStream,
+            getParticipantInfo(userId)?.username || 'Unbekannt',
+            false,
+            userId
+        );
+
+        // Altes Video ggf. ersetzen
+        const existing = document.getElementById(`video-${userId}`);
+        if (existing) existing.remove();
+
+        videoContainer.appendChild(videoElement);
     };
 
     try {

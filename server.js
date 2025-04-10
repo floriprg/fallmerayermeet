@@ -42,12 +42,21 @@ io.on('connection', (socket) => {
         console.log(`${username} hat Raum ${room} betreten`);
     });
 
+    // In der 'offer' und 'answer' Behandlung:
     socket.on('offer', ({ offer, to, room }) => {
-        socket.to(to).emit('offer', { offer, from: socket.id });
+        socket.to(to).emit('offer', {
+            offer,
+            from: socket.id,
+            username: socket.username // Benutzername mitsenden
+        });
     });
 
     socket.on('answer', ({ answer, to, room }) => {
-        socket.to(to).emit('answer', { answer, from: socket.id });
+        socket.to(to).emit('answer', {
+            answer,
+            from: socket.id,
+            username: socket.username
+        });
     });
 
     socket.on('ice-candidate', ({ candidate, to, room }) => {
