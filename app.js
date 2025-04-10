@@ -86,7 +86,13 @@ async function joinRoom() {
         socket.on('user-left', handlePeerLeave);
         socket.on('chat-message', handleChatMessage);
         socket.on('room-info', updateRoomInfo);
-
+        socket.on('user-joined', ({ userId, username }) => {
+            // Nur wenn es nicht der eigene Nutzer ist
+            if (userId !== socket.id) {
+                addSystemMessage(`${username} ist dem Raum beigetreten`);
+                handleNewPeer(userId);
+            }
+        });
         // Lokales Video anzeigen
         localVideoElement = createVideoElement(localStream, username, true);
         videoContainer.appendChild(localVideoElement);
@@ -134,23 +140,21 @@ function leaveRoom() {
 }
 
 // WebRTC Funktionen
+// In der handleNewPeer Funktion
 async function handleNewPeer(userId) {
-    if (userId === socket.id) return;
+    if (peerConnections[userId]) return;
 
     const peerConnection = new RTCPeerConnection(config);
     peerConnections[userId] = peerConnection;
 
-    // DataChannel erstellen
-    const dataChannel = peerConnection.createDataChannel('chat');
-    setupDataChannel(dataChannel, userId);
-    dataChannels[userId] = dataChannel;
+    // DataChannel erstellen (NUR beim Offerer)
+    if (userId > socket.id) { // ID-Vergleich für Offer/Answer Rollen
+        const dataChannel = peerConnection.createDataChannel('chat');
+        setupDataChannel(dataChannel, userId);
+        dataChannels[userId] = dataChannel;
+    }
 
-    // Lokale Streams hinzufügen
-    localStream.getTracks().forEach(track => {
-        peerConnection.addTrack(track, localStream);
-    });
-
-    // ICE Candidate handler
+    // ICE Candidate Handling
     peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
             socket.emit('ice-candidate', {
@@ -161,40 +165,34 @@ async function handleNewPeer(userId) {
         }
     };
 
-    // Remote Stream handler
+    // Remote Stream Handling
     peerConnection.ontrack = (event) => {
-        const [remoteStream] = event.streams;
-        const userId = event.transceiver.mid; // Besserer Identifier
-
-        // Video-Element erstellen
-        const videoElement = createVideoElement(
-            remoteStream,
-            getParticipantInfo(userId)?.username || 'Unbekannt',
-            false,
-            userId
-        );
-
-        // Altes Video ggf. ersetzen
-        const existing = document.getElementById(`video-${userId}`);
-        if (existing) existing.remove();
-
-        videoContainer.appendChild(videoElement);
+        const remoteStream = event.streams[0];
+        createVideoElement(remoteStream, getUsername(userId), false, userId);
     };
 
-    // Offer erstellen
-    try {
-        const offer = await peerConnection.createOffer();
-        await peerConnection.setLocalDescription(offer);
+    // Bestehende Tracks hinzufügen
+    localStream.getTracks().forEach(track => {
+        peerConnection.addTrack(track, localStream);
+    });
 
-        socket.emit('offer', {
-            offer,
-            to: userId,
-            room: roomName
-        });
-    } catch (err) {
-        console.error('Fehler beim Erstellen des Offers:', err);
+    // Offer erstellen wenn notwendig
+    if (userId > socket.id) {
+        try {
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+
+            socket.emit('offer', {
+                offer,
+                to: userId,
+                room: roomName
+            });
+        } catch (err) {
+            console.error('Offer Fehler:', err);
+        }
     }
 }
+
 
 async function handleOffer({ offer, from }) {
     const peerConnection = new RTCPeerConnection(config);

@@ -21,23 +21,30 @@ const rooms = {};
 io.on('connection', (socket) => {
     console.log('Neue Verbindung:', socket.id);
 
+    // In der 'join' Event-Behandlung
     socket.on('join', ({ username, room }) => {
         socket.join(room);
+        socket.username = username;
+        socket.room = room;
 
         if (!rooms[room]) {
-            rooms[room] = { participants: [] };
+            rooms[room] = { participants: {} };
         }
 
-        rooms[room].participants.push({ id: socket.id, username });
+        // Neuen Teilnehmer hinzufügen
+        rooms[room].participants[socket.id] = {
+            id: socket.id,
+            username: username
+        };
 
-        // Aktuelle Benutzerliste an alle senden
-        io.to(room).emit('user-list', rooms[room].participants);
-
-        // Raum-Info aktualisieren
-        io.to(room).emit('room-info', {
-            room,
-            participants: rooms[room].participants.length
+        // An alle außer den neuen Teilnehmer senden
+        socket.to(room).emit('user-joined', {
+            userId: socket.id,
+            username: username
         });
+
+        // Aktualisierte Liste an alle senden
+        io.to(room).emit('user-list', Object.values(rooms[room].participants));
 
         console.log(`${username} hat Raum ${room} betreten`);
     });
